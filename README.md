@@ -19,14 +19,22 @@ docker build -t ghcr.io/glexposito/otel-collector:latest .
 docker push ghcr.io/glexposito/otel-collector:latest
 ```
 
+## Configs
+
+- `config.yaml` (default) — traces, metrics, and logs to both New Relic and SigNoz.
+- `config.dev.yaml` — metrics only, to SigNoz only. No New Relic exporter, no traces/logs pipelines. Both are baked into the same image; pick one with the container's `--config` arg.
+
 ## Runtime configuration (env vars, any platform)
 
-- `NEW_RELIC_OTLP_ENDPOINT` — `otlp.nr-data.net:4317` (US) or `otlp.eu01.nr-data.net:4317` (EU, if your license key starts `eu01xx`)
-- `NEW_RELIC_LICENSE_KEY` — your New Relic ingest license key
-- `SIGNOZ_OTLP_ENDPOINT` — your SigNoz collector's OTLP gRPC address
-- `SIGNOZ_OTLP_INSECURE` — `"true"` for plaintext, `"false"` if SigNoz's collector is behind TLS
+- `NEW_RELIC_OTLP_ENDPOINT` — `otlp.nr-data.net:4317` (US) or `otlp.eu01.nr-data.net:4317` (EU, if your license key starts `eu01xx`) — `config.yaml` only
+- `NEW_RELIC_LICENSE_KEY` — your New Relic ingest license key — `config.yaml` only
+- `SIGNOZ_OTLP_ENDPOINT` — your SigNoz collector's OTLP gRPC address — both configs
+- `SIGNOZ_OTLP_INSECURE` — `"true"` for plaintext, `"false"` if SigNoz's collector is behind TLS — both configs
+- `DEPLOY_ENV` — value for the `deployment.environment`/`deployment.environment.name` resource attributes — both configs
 
 ## Run locally
+
+Default (traces + metrics + logs, New Relic + SigNoz):
 
 ```
 docker run --rm \
@@ -35,7 +43,19 @@ docker run --rm \
   -e NEW_RELIC_LICENSE_KEY=... \
   -e SIGNOZ_OTLP_ENDPOINT=signoz-otel-collector:4317 \
   -e SIGNOZ_OTLP_INSECURE=true \
+  -e DEPLOY_ENV=production \
   ghcr.io/glexposito/otel-collector:latest
+```
+
+Dev (metrics only, SigNoz only):
+
+```
+docker run --rm \
+  -p 4317:4317 -p 4318:4318 -p 13133:13133 \
+  -e SIGNOZ_OTLP_ENDPOINT=signoz-otel-collector:4317 \
+  -e SIGNOZ_OTLP_INSECURE=true \
+  ghcr.io/glexposito/otel-collector:latest \
+  --config=/etc/otelcol-contrib/config.dev.yaml
 ```
 
 ## Sending data to it
