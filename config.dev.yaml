@@ -36,7 +36,15 @@ extensions:
 service:
   extensions: [health_check]
   pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, resource, batch]
+      exporters: [otlp/signoz]
     metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, resource, batch]
+      exporters: [otlp/signoz]
+    logs:
       receivers: [otlp]
       processors: [memory_limiter, resource, batch]
       exporters: [otlp/signoz]
